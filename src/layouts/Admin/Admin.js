@@ -108,11 +108,11 @@ function Admin(props) {
           <div className='wrapper'>
             <Sidebar
               routes={routes}
-              logo={{
-                link: '',
-                text: 'Creative Tim',
-                imgSrc: logo,
-              }}
+              // logo={{
+              //   link: '',
+              //   text: 'Creative Tim',
+              //   imgSrc: logo,
+              // }}
               toggleSidebar={toggleSidebar}
             />
             <div className='main-panel' ref={mainPanelRef} data={color}>

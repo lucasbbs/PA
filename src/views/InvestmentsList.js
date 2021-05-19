@@ -51,7 +51,7 @@ const InvestmentsList = () => {
                     {investment.map((inves) => (
                       <tr key={inves.id}>
                         <td>
-                          <Link to={`/investment/${inves.id}`}>
+                          <Link to={`/admin/investment/${inves.id}`}>
                             {inves.name}
                           </Link>
                         </td>

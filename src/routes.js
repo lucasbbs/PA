@@ -44,7 +44,7 @@ var routes = [
     layout: '/admin',
   },
   {
-    path: '/investment/:id',
+    path: '/investment/',
     name: 'Novo Investimento',
     // rtlName: 'لوحة القيادة',
     icon: 'tim-icons icon-wallet-43',
