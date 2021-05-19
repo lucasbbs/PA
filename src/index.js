@@ -25,7 +25,6 @@ import 'assets/scss/black-dashboard-react.scss';
 import 'assets/demo/demo.css';
 import 'assets/css/nucleo-icons.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
 import ThemeContextWrapper from './components/ThemeWrapper/ThemeWrapper';
 import BackgroundColorWrapper from './components/BackgroundColorWrapper/BackgroundColorWrapper';
 import InvestmentDetails from 'views/InvestmentDetails';
@@ -35,7 +34,12 @@ ReactDOM.render(
     <BackgroundColorWrapper>
       <BrowserRouter>
         <Switch>
-          <Route path='/investment/:id' exact component={InvestmentDetails} />
+          <Route
+            path='/investment/:id'
+            exact
+            component={InvestmentDetails}
+            render={(props) => <AdminLayout {...props} />}
+          />
           <Route path='/admin' render={(props) => <AdminLayout {...props} />} />
           <Redirect from='/' to='/admin/dashboard' />
         </Switch>

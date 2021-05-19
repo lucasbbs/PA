@@ -31,9 +31,10 @@ function Icons() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                marginBottom: '30px',
               }}
             >
-              <h1>Investimentos</h1>
+              <h1 style={{ marginBottom: '0' }}>Investimentos</h1>
               <Button href='#'>+ Novo Investimento</Button>
             </div>
 
