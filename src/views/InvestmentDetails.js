@@ -31,7 +31,7 @@ const InvestmentDetails = () => {
               }}
             >
               <h1 style={{ marginBottom: '0' }}>
-                {investment.initial_amount}###{investment.name}
+                {investment.accrued_income}###{investment.name}
               </h1>
               <Button>Editar</Button>
             </div>
