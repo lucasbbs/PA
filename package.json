@@ -5,6 +5,7 @@
   "homepage": "https://demos.creative-tim.com/black-dashboard-react/#/admin/dashboard",
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.15.1",
+    "axios": "^0.21.1",
     "bootstrap": "4.5.3",
     "chart.js": "2.9.4",
     "classnames": "2.2.6",
@@ -23,6 +24,7 @@
     "react-input-mask": "^2.0.4",
     "react-notification-alert": "0.0.13",
     "react-number-format": "^4.5.5",
+    "react-paginate": "^7.1.2",
     "react-router-dom": "5.2.0",
     "react-scripts": "4.0.1",
     "react-text-mask": "^5.4.3",
@@ -31,7 +33,7 @@
     "text-mask-addons": "^3.8.0"
   },
   "scripts": {
-    "start": "concurrently --kill-others \"react-scripts start\" \"npx json-server --watch db.json --port 3000\"",
+    "start": "concurrently --kill-others \"react-scripts start\" \"npx json-server --watch src/data/db.json --port 3000\"",
     "build": "react-scripts build && gulp licenses",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",

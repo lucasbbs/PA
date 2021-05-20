@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { fetchInvestments } from 'services/Investments';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
-  Col,
-  Input,
-  Row,
-  Table,
-} from 'reactstrap';
+import PaginationUI from '../components/Pagination/Pagination';
+import { Button, Col, Input, Row } from 'reactstrap';
 import { useParams } from 'react-router-dom';
 
 // import InputMask from 'react-input-mask';
 import NumberFormat from 'react-number-format';
+import Incomes from '../components/Incomes/Incomes';
 // import { moment } from 'moment';
 // import InvestmentsList from 'InvestmentsList.js';
 
 const InvestmentDetails = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [investmentsPerPage, setInvestmentsPerpage] = useState(15);
+
   const [name, setName] = useState('');
   const [broker, setBroker] = useState('');
   const [type, setType] = useState('');
@@ -29,8 +24,9 @@ const InvestmentDetails = () => {
   const [initialAmount, setInitialAmount] = useState(0);
   const [accruedIncome, setAccruedIncome] = useState(0);
   const [investment, setInvestment] = useState([]);
+  // const [incomes, setIncomes] = useState([]);
   const [incomes, setIncomes] = useState([]);
-  const [array, setArray] = useState([]);
+  // const [array, setArray] = useState([]);
 
   const { id } = useParams();
 
@@ -47,23 +43,45 @@ const InvestmentDetails = () => {
       setInvestmentDate(investment.investment_date);
       setInitialAmount(investment.initial_amount);
       setAccruedIncome(investment.accrued_income);
-      setArray(
-        investment.incomes
-          .map((key) => Object.keys(key).map((date) => date))
-          .flat()
-          .map((data) => {
-            let datePartes = data.split('-');
-            return `${datePartes[2]}/${datePartes[1]}/${datePartes[0]}`;
-          })
-      );
-      // console.log(investment.incomes);
-      setIncomes(investment.incomes.map((key) => Object.values(key).flat()));
+      const dates = investment.incomes
+        .map((key) => Object.keys(key).map((date) => date))
+        .flat()
+        .map((data) => {
+          let datePartes = data.split('-');
+          return `${datePartes[2]}/${datePartes[1]}/${datePartes[0]}`;
+        });
 
-      // console.log(incomes);
+      const IncomesTemp = investment.incomes.map(
+        (key) => Object.values(key)[0]
+      );
+
+      let temparray = [];
+      for (let i = 0; i < IncomesTemp.length; i++) {
+        temparray.push([dates[i], IncomesTemp[i]]);
+      }
+
+      setIncomes(temparray);
     };
     getInvestmentDetails();
   }, [id]);
 
+  const indexOfFirstInvestment = currentPage * investmentsPerPage;
+  const indexOfLastInvestment = indexOfFirstInvestment + investmentsPerPage;
+
+  const currentincomes = incomes.slice(
+    indexOfFirstInvestment - investmentsPerPage,
+    indexOfLastInvestment - investmentsPerPage
+  );
+
+  //Change Page
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const setNumberPerPage = (input) => {
+    console.log(input);
+    setInvestmentsPerpage(Number(input));
+  };
   return (
     <>
       <div className='content'>
@@ -80,12 +98,6 @@ const InvestmentDetails = () => {
               <h1 style={{ marginBottom: '0' }}>{name}</h1>
               <Button>Editar</Button>
             </div>
-            {/* <Input
-              type='tel'
-              mask='+4\9 99 999 99'
-              maskChar=' '
-              tag={InputMask}
-            /> */}
             <div
               style={{
                 display: 'flex',
@@ -102,7 +114,6 @@ const InvestmentDetails = () => {
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value);
-                        console.log(name);
                       }}
                     />
                   </Col>
@@ -202,35 +213,17 @@ const InvestmentDetails = () => {
               </Col>
             </div>
 
-            <Card style={{ marginTop: '25px' }}>
-              <CardHeader>
-                <CardTitle tag='h4'>Receitas</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Table className='tablesorter' responsive>
-                  <thead className='text-primary'>
-                    <tr>
-                      {array.map((data) => (
-                        <th> {data}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {incomes.map((key) => (
-                        <td>
-                          {key.toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          })}
-                        </td>
-                      ))}
-                    </tr>
-                    {/* ))} */}
-                  </tbody>
-                </Table>
-              </CardBody>
-            </Card>
+            <Incomes
+              incomes={currentincomes}
+              numberPerPage={investmentsPerPage}
+              setNumberPerPage={setNumberPerPage}
+            />
+            <PaginationUI
+              incomesPerPage={investmentsPerPage}
+              totalIncomes={incomes.length}
+              paginate={paginate}
+              currentPageNumber={currentPage}
+            />
           </Col>
         </Row>
       </div>
