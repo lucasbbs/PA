@@ -34,12 +34,12 @@ ReactDOM.render(
     <BackgroundColorWrapper>
       <BrowserRouter>
         <Switch>
-          <Route
+          {/* <Route
             path='/investment/:id'
             exact
             component={InvestmentDetails}
             render={(props) => <AdminLayout {...props} />}
-          />
+          /> */}
           <Route path='/admin' render={(props) => <AdminLayout {...props} />} />
           <Redirect from='/' to='/admin/dashboard' />
         </Switch>
