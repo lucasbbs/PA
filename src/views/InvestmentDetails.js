@@ -81,6 +81,7 @@ const InvestmentDetails = () => {
   const setNumberPerPage = (input) => {
     console.log(input);
     setInvestmentsPerpage(Number(input));
+    setCurrentPage(1);
   };
   return (
     <>
@@ -105,9 +106,9 @@ const InvestmentDetails = () => {
                 alignItems: 'center',
               }}
             >
-              <Col md='7'>
+              <Col md='10'>
                 <Row style={{ marginBottom: '10px' }}>
-                  <Col md='7' style={{ paddingRight: '0' }}>
+                  <Col md='6' style={{ paddingRight: '0' }}>
                     <Input
                       style={{ backgroundColor: '#2b3553' }}
                       type='text'
@@ -130,7 +131,7 @@ const InvestmentDetails = () => {
                       <option>Ativa</option>
                     </Input>
                   </Col>
-                  <Col md='1' style={{ paddingRight: '0' }}>
+                  <Col md='2' style={{ paddingRight: '0' }}>
                     <Input
                       style={{ backgroundColor: '#2b3553' }}
                       type='select'

@@ -5,6 +5,8 @@ import {
   Card,
   CardBody,
   CardHeader,
+  FormFeedback,
+  FormGroup,
   Input,
   Modal,
   ModalBody,
@@ -15,14 +17,21 @@ import {
 
 const Incomes = ({ incomes, numberPerPage, setNumberPerPage }) => {
   const [modal, setModal] = useState(false);
-  const toggle = () => setModal(!modal);
+  const [isValid, setIsValid] = useState(true);
+  const toggle = () => {
+    setModal(!modal);
+    setIsValid(true);
+  };
 
   const fun = (e) => {
     const inputEl = document.querySelector('#ModalInputId').value;
-    // numberPerPage = e.target.value;
-    // console.log(inputEl);
-    setNumberPerPage(inputEl);
-    toggle();
+    if (inputEl < 0 || inputEl > 15) {
+      setIsValid(false);
+    } else {
+      setIsValid(true);
+      setNumberPerPage(inputEl);
+      toggle();
+    }
   };
 
   return (
@@ -32,7 +41,31 @@ const Incomes = ({ incomes, numberPerPage, setNumberPerPage }) => {
           Defina quantas receitas por página serão exibidas
         </ModalHeader>
         <ModalBody>
-          <Input type='text' id='ModalInputId' style={{ color: 'black' }} />
+          <FormGroup>
+            {isValid ? (
+              <Input
+                type='number'
+                id='ModalInputId'
+                style={{ color: 'black' }}
+                min={0}
+                max={15}
+              />
+            ) : (
+              <>
+                <Input
+                  style={{ marginBottom: '20px', color: 'black' }}
+                  invalid
+                  type='number'
+                  id='ModalInputId'
+                  min={0}
+                  max={15}
+                />
+                <FormFeedback tooltip>
+                  Você deve informar um número emtre 0 e 15
+                </FormFeedback>
+              </>
+            )}
+          </FormGroup>
         </ModalBody>
         <ModalFooter>
           <Button

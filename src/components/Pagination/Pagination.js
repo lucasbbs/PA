@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Nav, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
@@ -19,10 +19,14 @@ const PaginationUI = ({
     <Nav>
       <Pagination size='lg' aria-label='Page navigation example'>
         <PaginationItem>
-          <PaginationLink first href='#' />
+          <PaginationLink first to='#' onClick={() => paginate(1)} />
         </PaginationItem>
         <PaginationItem>
-          <PaginationLink previous href='#' />
+          <PaginationLink
+            previous
+            to='#'
+            onClick={() => paginate(Math.max(currentPageNumber - 1, 1))}
+          />
         </PaginationItem>
         {incomeNumbers.map((number) => (
           <PaginationItem
@@ -39,10 +43,25 @@ const PaginationUI = ({
           </PaginationItem>
         ))}
         <PaginationItem>
-          <PaginationLink next href='#' />
+          <PaginationLink
+            next
+            to='#'
+            onClick={() =>
+              paginate(
+                Math.min(
+                  currentPageNumber + 1,
+                  incomeNumbers[incomeNumbers.length - 1]
+                )
+              )
+            }
+          />
         </PaginationItem>
         <PaginationItem>
-          <PaginationLink last href='#' />
+          <PaginationLink
+            last
+            to='#'
+            onClick={() => paginate(incomeNumbers[incomeNumbers.length - 1])}
+          />
         </PaginationItem>
       </Pagination>
     </Nav>

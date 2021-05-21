@@ -25,7 +25,12 @@ function format(label) {
     style: 'currency',
     currency: 'BRL',
   });
-  return formatCurrency.format(label);
+  // return label.toLocaleString('pt-BR', {
+  //   style: 'currency',
+  //   currency: 'BRL',
+  // });
+  // return label;
+  return formatCurrency.format(Number(label));
 }
 let chart1_2_options = {
   maintainAspectRatio: false,
@@ -45,8 +50,11 @@ let chart1_2_options = {
     position: 'nearest',
     locale: 'pt-BR',
     callbacks: {
-      label: function (tooltipItem) {
-        return format(tooltipItem.yLabel);
+      label: function (tooltipItem, data) {
+        var indice = tooltipItem.index;
+        return `${data.labels[indice]}:  ${format(
+          data.datasets[0].data[indice]
+        )}`;
       },
     },
   },
@@ -311,6 +319,10 @@ let chartExample3 = {
       mode: 'nearest',
       intersect: 0,
       position: 'nearest',
+      locale: 'pt-BR',
+      callbacks: {
+        label: (tooltipItem) => format(Number(tooltipItem.yLabel)),
+      },
     },
     responsive: true,
     scales: {
@@ -396,6 +408,10 @@ const chartExample4 = {
       mode: 'nearest',
       intersect: 0,
       position: 'nearest',
+      locale: 'pt-BR',
+      callbacks: {
+        label: (tooltipItem) => format(Number(tooltipItem.yLabel)),
+      },
     },
     responsive: true,
     scales: {
@@ -458,17 +474,28 @@ const chartDefault = (dataList, labels) => {
       mode: 'nearest',
       intersect: 0,
       position: 'nearest',
+      locale: 'pt-BR',
+      callbacks: {
+        label: function (tooltipItem, data) {
+          var indice = tooltipItem.index;
+          return `${data.labels[indice]}:  ${format(
+            data.datasets[0].data[indice]
+          )}`;
+        },
+      },
     },
     responsive: true,
     scales: {
       yAxes: [
         {
           gridLines: {
+            display: false,
             drawBorder: false,
             color: 'rgba(225,78,202,0.1)',
             zeroLineColor: 'transparent',
           },
           ticks: {
+            display: false,
             suggestedMin: 60,
             suggestedMax: 120,
             padding: 20,
@@ -479,11 +506,13 @@ const chartDefault = (dataList, labels) => {
       xAxes: [
         {
           gridLines: {
+            display: false,
             drawBorder: false,
             color: 'rgba(225,78,202,0.1)',
             zeroLineColor: 'transparent',
           },
           ticks: {
+            display: false,
             padding: 20,
             fontColor: '#9e9e9e',
           },
@@ -498,8 +527,8 @@ const chartDefault = (dataList, labels) => {
         label: 'Countries',
         fill: true,
         backgroundColor: 'transparent',
-        hoverBackgroundColor: gradientStroke,
-        borderColor: '#d048b6',
+        hoverBackgroundColor: 'rgba(208, 72, 182, 0.15)',
+        borderColor: 'rgba(208, 72, 182)',
         borderWidth: 2,
         borderDash: [],
         borderDashOffset: 0.0,
