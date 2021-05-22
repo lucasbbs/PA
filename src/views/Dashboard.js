@@ -40,17 +40,20 @@ import {
 
 // core components
 import {
-  chartExample1,
+  // chartExample1,
   chartExample2,
   chartExample3,
   chartExample4,
   chartDefault,
 } from 'variables/charts.js';
 import { fetchInvestments } from '../services/Investments';
+import { getDataForTheFirstChart } from '../helpers/functions';
 
 function Dashboard(props) {
+  const [chartExample1, setChartExample1] = useState({});
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dataForTheFirstChart, setDataForTheFirstChart] = useState([]);
 
   const [
     dataChartInvetmentsPerBrokers,
@@ -68,7 +71,7 @@ function Dashboard(props) {
       const investment = await fetchInvestments();
       setInvestments(investment);
 
-      let brokers = [...new Set(investment.map((inv) => inv.broker))];
+      const brokers = [...new Set(investment.map((inv) => inv.broker))];
 
       const somas = [];
       for (let i = 0; i < brokers.length; i++) {
@@ -81,21 +84,133 @@ function Dashboard(props) {
         somas.push(soma);
       }
 
-      const filtered = [[...somas], [...brokers]];
-      setDataChartInvetmentsPerartBrokers(filtered);
+      setDataForTheFirstChart(getDataForTheFirstChart(investments));
+      setDataChartInvetmentsPerartBrokers([[...somas], [...brokers]]);
     };
     setLoading(false);
     getInvestmentDetails();
+    setChartExample1({
+      data: (canvas) => {
+        let ctx = canvas.getContext('2d');
+
+        let gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+
+        gradientStroke.addColorStop(1, 'rgba(29,140,248,0.2)');
+        gradientStroke.addColorStop(0.4, 'rgba(29,140,248,0.0)');
+        gradientStroke.addColorStop(0, 'rgba(29,140,248,0)'); //blue colors
+
+        return {
+          labels: dataForTheFirstChart[1],
+          datasets: [
+            {
+              label: 'Income',
+              fill: true,
+              backgroundColor: gradientStroke,
+              borderColor: '#1f8ef1',
+              borderWidth: 2,
+              borderDash: [],
+              borderDashOffset: 0.0,
+              pointBackgroundColor: '#1f8ef1',
+              pointBorderColor: 'rgba(255,255,255,0)',
+              pointHoverBackgroundColor: '#1f8ef1',
+              pointBorderWidth: 20,
+              pointHoverRadius: 4,
+              pointHoverBorderWidth: 15,
+              pointRadius: 4,
+              data: dataForTheFirstChart[0],
+            },
+          ],
+        };
+      },
+
+      options: chart1_2_options,
+    });
   }, []);
-  console.log(dataChartInvetmentsPerBrokers);
+
+  let chart1_2_options = {
+    animation: false,
+    normalized: true,
+    parsing: false,
+    maintainAspectRatio: false,
+    legend: {
+      display: false,
+    },
+    // tooltipTemplate: "<%if (label){%><%=label %>: <%}%><%= value + ' %' %>",
+    // multiTooltipTemplate: `<%= format(value) %>`,
+    tooltips: {
+      backgroundColor: '#f5f5f5',
+      titleFontColor: '#333',
+      bodyFontColor: '#666',
+      bodySpacing: 4,
+      xPadding: 12,
+      mode: 'nearest',
+      intersect: 0,
+      position: 'nearest',
+      locale: 'pt-BR',
+      callbacks: {
+        label: function (tooltipItem, data) {
+          var indice = tooltipItem.index;
+          return `${data.labels[indice]}:  ${format(
+            data.datasets[0].data[indice]
+          )}`;
+        },
+      },
+    },
+
+    responsive: true,
+    scales: {
+      yAxes: [
+        {
+          barPercentage: 1.6,
+          gridLines: {
+            drawBorder: false,
+            color: 'rgba(29,140,248,0.0)',
+            zeroLineColor: 'transparent',
+          },
+          ticks: {
+            suggestedMin: 60,
+            suggestedMax: 125,
+            padding: 20,
+            fontColor: '#9a9a9a',
+          },
+        },
+      ],
+      xAxes: [
+        {
+          barPercentage: 1.6,
+          gridLines: {
+            drawBorder: false,
+            color: 'rgba(29,140,248,0.1)',
+            zeroLineColor: 'transparent',
+          },
+          ticks: {
+            padding: 20,
+            fontColor: '#9a9a9a',
+          },
+        },
+      ],
+    },
+  };
+
+  // #########################################
+  // // // used inside src/views/Dashboard.js
+  // #########################################
+
+  function format(label) {
+    let formatCurrency = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+    return formatCurrency.format(Number(label));
+  }
   return (
     <>
       <div className='content'>
-        {!dataChartInvetmentsPerBrokers.length ? (
+        {!dataChartInvetmentsPerBrokers.length &&
+        !dataForTheFirstChart.length ? (
           <h2>Carregando...</h2>
         ) : (
           <>
-            {' '}
             <Row>
               <Col xs='12'>
                 <Card className='card-chart'>
@@ -167,8 +282,12 @@ function Dashboard(props) {
                   </CardHeader>
                   <CardBody>
                     <div className='chart-area'>
-                      <Line
+                      {/* <Line
                         data={chartExample1[bigChartData]}
+                       
+                      /> */}
+                      <Line
+                        data={chartExample1.data}
                         options={chartExample1.options}
                       />
                     </div>
@@ -285,16 +404,12 @@ function Dashboard(props) {
                 </Card>
               </Col>
               <Col lg='6' md='12'>
-                <Card style={{ overflow: 'hidden' }}>
+                <Card>
                   <CardHeader>
                     <CardTitle tag='h4'>Simple Table</CardTitle>
                   </CardHeader>
-                  <CardBody>
-                    <Table
-                      className='tablesorter'
-                      responsive
-                      style={{ overflow: 'auto' }}
-                    >
+                  <CardBody style={{ overflow: 'hidden' }}>
+                    <Table className='tablesorter'>
                       <thead className='text-primary'>
                         <tr>
                           <th>Name</th>

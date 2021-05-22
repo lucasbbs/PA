@@ -55,7 +55,7 @@ var routes = [
     path: '/icons',
     name: 'Icons',
     // rtlName: 'الرموز',
-    icon: 'tim-icons icon-wallet-43',
+    icon: 'tim-icons icon-atom',
     component: Icons,
     layout: '/admin',
   },
