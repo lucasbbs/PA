@@ -462,7 +462,10 @@ const chartDefault = (dataList, labels) => {
     gradientStroke.addColorStop(1, 'rgba(72,72,176,0.1)');
     gradientStroke.addColorStop(0.4, 'rgba(72,72,176,0.0)');
     gradientStroke.addColorStop(0, 'rgba(119,52,169,0)'); //purple colors
+
+    return gradientStroke;
   };
+
   const options = {
     maintainAspectRatio: false,
     legend: {
@@ -524,6 +527,7 @@ const chartDefault = (dataList, labels) => {
     },
   };
   return {
+    gradientStroke,
     labels: labels,
     datasets: [
       {

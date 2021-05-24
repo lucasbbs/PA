@@ -15,6 +15,11 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
+import { parse, toDate } from 'date-fns';
+import format from 'date-fns/format';
+import ptBR from 'date-fns/locale/pt-BR';
+// import moment from 'moment';
+
 import React, { useEffect, useState } from 'react';
 // nodejs library that concatenates classes
 import classNames from 'classnames';
@@ -33,9 +38,13 @@ import {
   DropdownMenu,
   DropdownItem,
   UncontrolledDropdown,
-  Table,
   Row,
   Col,
+  Spinner,
+  Input,
+  Form,
+  Label,
+  FormGroup,
 } from 'reactstrap';
 
 // core components
@@ -46,33 +55,57 @@ import {
   chartExample4,
   chartDefault,
 } from 'variables/charts.js';
+import TableTopInvestments from '../components/TableTopInvestments/TableTopInvestments';
 import { fetchInvestments } from '../services/Investments';
-import { getDataForTheFirstChart } from '../helpers/functions';
+import {
+  getDataForTheFirstChart,
+  getDataForTheInflationChart,
+  handleSlicesOfInvestments,
+} from '../helpers/functions';
+import { fetchInflation } from '../services/Inflation';
 
-function Dashboard(props) {
-  const [chartExample1, setChartExample1] = useState({});
+Array.prototype.max = function () {
+  return Math.max.apply(null, this);
+};
+
+Array.prototype.min = function () {
+  return Math.min.apply(null, this);
+};
+
+function Dashboard() {
   const [investments, setInvestments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [dataForTheFirstChart, setDataForTheFirstChart] = useState([]);
+  const [Incomes, setIncomes] = useState([]);
+  const [investmentsToBeDisplayed, setInvestmentsToBeDisplayed] = useState([]);
 
+  const [inflations, setInflations] = useState([]);
+  const [inflationsToBeDisplayed, setInflationsToBeDisplayed] = useState([]);
   const [
     dataChartInvetmentsPerBrokers,
     setDataChartInvetmentsPerartBrokers,
   ] = useState([]);
 
   const [bigChartData, setbigChartData] = useState('data1');
+
   const setBgChartData = (name) => {
     setbigChartData(name);
   };
-
   useEffect(() => {
-    setLoading(true);
     const getInvestmentDetails = async () => {
       const investment = await fetchInvestments();
+      const inflation = await fetchInflation();
       setInvestments(investment);
+      inflation.forEach((inf) => {
+        const dataPartes = inf.data.split('/');
+        inf.data = `${dataPartes[2]}-${dataPartes[1]}-${dataPartes[0]}`;
+        inf.valor = Number(inf.valor) / 100 + 1;
+      });
+      setIncomes(getDataForTheFirstChart(investment));
+      setInvestmentsToBeDisplayed(getDataForTheFirstChart(investment));
+
+      setInflations(inflation);
+      setInflationsToBeDisplayed(getDataForTheInflationChart(inflation));
 
       const brokers = [...new Set(investment.map((inv) => inv.broker))];
-
       const somas = [];
       for (let i = 0; i < brokers.length; i++) {
         let soma = 0;
@@ -83,60 +116,16 @@ function Dashboard(props) {
         }
         somas.push(soma);
       }
-
-      setDataForTheFirstChart(getDataForTheFirstChart(investments));
       setDataChartInvetmentsPerartBrokers([[...somas], [...brokers]]);
     };
-    setLoading(false);
     getInvestmentDetails();
-    setChartExample1({
-      data: (canvas) => {
-        let ctx = canvas.getContext('2d');
-
-        let gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
-
-        gradientStroke.addColorStop(1, 'rgba(29,140,248,0.2)');
-        gradientStroke.addColorStop(0.4, 'rgba(29,140,248,0.0)');
-        gradientStroke.addColorStop(0, 'rgba(29,140,248,0)'); //blue colors
-
-        return {
-          labels: dataForTheFirstChart[1],
-          datasets: [
-            {
-              label: 'Income',
-              fill: true,
-              backgroundColor: gradientStroke,
-              borderColor: '#1f8ef1',
-              borderWidth: 2,
-              borderDash: [],
-              borderDashOffset: 0.0,
-              pointBackgroundColor: '#1f8ef1',
-              pointBorderColor: 'rgba(255,255,255,0)',
-              pointHoverBackgroundColor: '#1f8ef1',
-              pointBorderWidth: 20,
-              pointHoverRadius: 4,
-              pointHoverBorderWidth: 15,
-              pointRadius: 4,
-              data: dataForTheFirstChart[0],
-            },
-          ],
-        };
-      },
-
-      options: chart1_2_options,
-    });
   }, []);
 
   let chart1_2_options = {
-    animation: false,
-    normalized: true,
-    parsing: false,
     maintainAspectRatio: false,
     legend: {
       display: false,
     },
-    // tooltipTemplate: "<%if (label){%><%=label %>: <%}%><%= value + ' %' %>",
-    // multiTooltipTemplate: `<%= format(value) %>`,
     tooltips: {
       backgroundColor: '#f5f5f5',
       titleFontColor: '#333',
@@ -146,17 +135,20 @@ function Dashboard(props) {
       mode: 'nearest',
       intersect: 0,
       position: 'nearest',
-      locale: 'pt-BR',
       callbacks: {
         label: function (tooltipItem, data) {
           var indice = tooltipItem.index;
-          return `${data.labels[indice]}:  ${format(
-            data.datasets[0].data[indice]
-          )}`;
+
+          return bigChartData === 'data1'
+            ? `${data.labels[indice]}:  ${currencyFormat(
+                data.datasets[0].data[indice]
+              )}`
+            : `${data.labels[indice]}:  ${data.datasets[0].data[indice].toFixed(
+                2
+              )} %`;
         },
       },
     },
-
     responsive: true,
     scales: {
       yAxes: [
@@ -168,8 +160,12 @@ function Dashboard(props) {
             zeroLineColor: 'transparent',
           },
           ticks: {
+            count: 0,
+            callback: (label) =>
+              bigChartData === 'data1'
+                ? currencyFormat(Number(label))
+                : `${Number(label)}`.toLocaleString('pt-Br') + '%',
             suggestedMin: 60,
-            suggestedMax: 125,
             padding: 20,
             fontColor: '#9a9a9a',
           },
@@ -191,24 +187,132 @@ function Dashboard(props) {
       ],
     },
   };
+  if (bigChartData === 'data2') {
+    chart1_2_options.scales.yAxes.ticks = {
+      ...chart1_2_options.scales.yAxes.ticks,
+      ...{
+        suggestedMax: Math.ceil(inflationsToBeDisplayed[0].max() / 10) * 10,
+      },
+    };
+  }
 
+  let chartExample1 = {
+    data1: (canvas) => {
+      let ctx = canvas.getContext('2d');
+
+      let gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+
+      gradientStroke.addColorStop(1, 'rgba(29,140,248,0.2)');
+      gradientStroke.addColorStop(0.4, 'rgba(29,140,248,0.0)');
+      gradientStroke.addColorStop(0, 'rgba(29,140,248,0)'); //blue colors
+
+      return {
+        gradientStroke,
+        labels: investmentsToBeDisplayed[1],
+        datasets: [
+          {
+            label: 'Income',
+            fill: true,
+            backgroundColor: gradientStroke,
+            borderColor: '#1f8ef1',
+            borderWidth: 2,
+            borderDash: [],
+            borderDashOffset: 0.0,
+            pointBackgroundColor: '#1f8ef1',
+            pointBorderColor: 'rgba(255,255,255,0)',
+            pointHoverBackgroundColor: '#1f8ef1',
+            pointBorderWidth: 20,
+            pointHoverRadius: 4,
+            pointHoverBorderWidth: 15,
+            pointRadius: 4,
+            data: investmentsToBeDisplayed[0],
+          },
+        ],
+      };
+    },
+    data2: (canvas) => {
+      let ctx = canvas.getContext('2d');
+
+      let gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+
+      gradientStroke.addColorStop(1, 'rgba(237, 248, 29,0.2)');
+      gradientStroke.addColorStop(0.4, 'rgba(237, 248, 29,0.0)');
+      gradientStroke.addColorStop(0, 'rgba(237, 248, 29,0)'); //yellow colors
+
+      return {
+        gradientStroke,
+        labels: inflationsToBeDisplayed[1],
+        datasets: [
+          {
+            label: 'Inflation',
+            fill: true,
+            backgroundColor: gradientStroke,
+            borderColor: 'rgba(237, 248, 29)',
+            borderWidth: 2,
+            borderDash: [],
+            borderDashOffset: 0.0,
+            pointBackgroundColor: 'rgba(237, 248, 29)',
+            pointBorderColor: 'rgba(255,255,255,0)',
+            pointHoverBackgroundColor: 'rgba(237, 248, 29)',
+            pointBorderWidth: 20,
+            pointHoverRadius: 4,
+            pointHoverBorderWidth: 15,
+            pointRadius: 4,
+            data: inflationsToBeDisplayed[0], //
+          },
+        ],
+      };
+    },
+    options: chart1_2_options,
+  };
   // #########################################
   // // // used inside src/views/Dashboard.js
   // #########################################
 
-  function format(label) {
+  function currencyFormat(label) {
     let formatCurrency = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });
     return formatCurrency.format(Number(label));
   }
+
+  function handleFilter() {
+    const initialDate = document.querySelector('#InitialDate').value;
+    const finalDate = document.querySelector('#FinalDate').value;
+    setInflationsToBeDisplayed(
+      getDataForTheInflationChart(
+        inflations,
+        initialDate + '-01',
+        finalDate + '-01'
+      )
+    );
+
+    setInvestmentsToBeDisplayed(
+      handleSlicesOfInvestments(Incomes, initialDate + '-02', finalDate + '-02')
+    );
+    console.log(
+      investmentsToBeDisplayed
+      // handleSlicesOfInvestments(
+      //   investmentsToBeDisplayed,
+      //   initialDate + '-02',
+      //   finalDate + '-02'
+      // )
+    );
+  }
   return (
     <>
       <div className='content'>
-        {!dataChartInvetmentsPerBrokers.length &&
-        !dataForTheFirstChart.length ? (
-          <h2>Carregando...</h2>
+        {!dataChartInvetmentsPerBrokers.length ? (
+          <>
+            <h2>Carregando...</h2>
+
+            <Spinner
+              color='light'
+              style={{ width: '3rem', height: '3rem' }}
+              type='grow'
+            />
+          </>
         ) : (
           <>
             <Row>
@@ -216,8 +320,71 @@ function Dashboard(props) {
                 <Card className='card-chart'>
                   <CardHeader>
                     <Row>
+                      <Col md='12'>
+                        <div
+                          style={{ display: 'flex', justifyContent: 'center' }}
+                        >
+                          <Form inline>
+                            <FormGroup className='mb-2 mr-sm-2 mb-sm-0'>
+                              <Col sm='12'>
+                                <Label for='InitialDate'>
+                                  Informe uma data inicial
+                                </Label>
+                                <Input
+                                  id='InitialDate'
+                                  type='month'
+                                  min={format(
+                                    new Date(inflationsToBeDisplayed[1][0]),
+                                    'yyyy-MM',
+                                    { locale: ptBR }
+                                  )}
+                                  max={format(
+                                    new Date(
+                                      inflationsToBeDisplayed[1][
+                                        inflationsToBeDisplayed[1].length - 1
+                                      ]
+                                    ),
+                                    'yyyy-MM',
+                                    { locale: ptBR }
+                                  )}
+                                />
+                              </Col>
+                            </FormGroup>
+                            <FormGroup className='mb-2 mr-sm-2 mb-sm-0'>
+                              <Col sm='12'>
+                                <Label for='FinalDate'>
+                                  Informe uma data final
+                                </Label>
+                                <Input
+                                  id='FinalDate'
+                                  type='month'
+                                  min={format(
+                                    new Date(inflationsToBeDisplayed[1][0]),
+                                    'yyyy-MM',
+                                    {
+                                      locale: ptBR,
+                                    }
+                                  )}
+                                  max={format(
+                                    new Date(
+                                      inflationsToBeDisplayed[1][
+                                        inflationsToBeDisplayed[1].length - 1
+                                      ]
+                                    ),
+                                    'yyyy-MM',
+                                    { locale: ptBR }
+                                  )}
+                                />
+                              </Col>
+                            </FormGroup>
+
+                            <Button onClick={handleFilter}>Filtrar</Button>
+                          </Form>
+                        </div>
+                      </Col>
+
                       <Col className='text-left' sm='6'>
-                        <h5 className='card-category'>Total Shipments</h5>
+                        {/* <h5 className='card-category'>Total Shipments</h5> */}
                         <CardTitle tag='h2'>Performance</CardTitle>
                       </Col>
                       <Col sm='6'>
@@ -233,10 +400,13 @@ function Dashboard(props) {
                             color='info'
                             id='0'
                             size='sm'
-                            onClick={() => setBgChartData('data1')}
+                            onClick={() => {
+                              setBgChartData('data1');
+                              // history.go(0);
+                            }}
                           >
                             <span className='d-none d-sm-block d-md-block d-lg-block d-xl-block'>
-                              Accounts
+                              Rendimentos
                             </span>
                             <span className='d-block d-sm-none'>
                               <i className='tim-icons icon-single-02' />
@@ -250,10 +420,12 @@ function Dashboard(props) {
                             className={classNames('btn-simple', {
                               active: bigChartData === 'data2',
                             })}
-                            onClick={() => setBgChartData('data2')}
+                            onClick={() => {
+                              setBgChartData('data2');
+                            }}
                           >
                             <span className='d-none d-sm-block d-md-block d-lg-block d-xl-block'>
-                              Purchases
+                              Inflação
                             </span>
                             <span className='d-block d-sm-none'>
                               <i className='tim-icons icon-gift-2' />
@@ -282,13 +454,9 @@ function Dashboard(props) {
                   </CardHeader>
                   <CardBody>
                     <div className='chart-area'>
-                      {/* <Line
-                        data={chartExample1[bigChartData]}
-                       
-                      /> */}
                       <Line
-                        data={chartExample1.data}
                         options={chartExample1.options}
+                        data={chartExample1[bigChartData]}
                       />
                     </div>
                   </CardBody>
@@ -403,69 +571,7 @@ function Dashboard(props) {
                   </CardBody>
                 </Card>
               </Col>
-              <Col lg='6' md='12'>
-                <Card>
-                  <CardHeader>
-                    <CardTitle tag='h4'>Simple Table</CardTitle>
-                  </CardHeader>
-                  <CardBody style={{ overflow: 'hidden' }}>
-                    <Table className='tablesorter'>
-                      <thead className='text-primary'>
-                        <tr>
-                          <th>Name</th>
-                          <th>Country</th>
-                          <th>City</th>
-                          <th className='text-center'>Salary</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Dakota Rice</td>
-                          <td>Niger</td>
-                          <td>Oud-Turnhout</td>
-                          <td className='text-center'>$36,738</td>
-                        </tr>
-                        <tr>
-                          <td>Minerva Hooper</td>
-                          <td>Curaçao</td>
-                          <td>Sinaai-Waas</td>
-                          <td className='text-center'>$23,789</td>
-                        </tr>
-                        <tr>
-                          <td>Sage Rodriguez</td>
-                          <td>Netherlands</td>
-                          <td>Baileux</td>
-                          <td className='text-center'>$56,142</td>
-                        </tr>
-                        <tr>
-                          <td>Philip Chaney</td>
-                          <td>Korea, South</td>
-                          <td>Overland Park</td>
-                          <td className='text-center'>$38,735</td>
-                        </tr>
-                        <tr>
-                          <td>Doris Greene</td>
-                          <td>Malawi</td>
-                          <td>Feldkirchen in Kärnten</td>
-                          <td className='text-center'>$63,542</td>
-                        </tr>
-                        <tr>
-                          <td>Mason Porter</td>
-                          <td>Chile</td>
-                          <td>Gloucester</td>
-                          <td className='text-center'>$78,615</td>
-                        </tr>
-                        <tr>
-                          <td>Jon Porter</td>
-                          <td>Portugal</td>
-                          <td>Gloucester</td>
-                          <td className='text-center'>$98,615</td>
-                        </tr>
-                      </tbody>
-                    </Table>
-                  </CardBody>
-                </Card>
-              </Col>
+              <TableTopInvestments investments={investments} />
             </Row>
           </>
         )}
